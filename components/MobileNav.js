@@ -19,9 +19,9 @@ export default function MobileNav() {
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (
-          <Link key={item.href} href={item.href} className="flex flex-col items-center gap-1 w-full">
-            <div className={`relative p-2 rounded-xl transition-all ${isActive ? 'text-[var(--accent-color)]' : 'text-secondary'}`}>
-              <item.icon size={24} />
+          <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center gap-1 w-full h-full cursor-pointer active:scale-95 transition-transform">
+            <div className={`relative p-1.5 rounded-xl transition-all ${isActive ? 'text-[var(--accent-color)] bg-[var(--accent-color)]/10' : 'text-secondary'}`}>
+              <item.icon size={22} />
               {isActive && (
                 <motion.div 
                   layoutId="activeTab"

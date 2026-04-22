@@ -29,6 +29,7 @@ export default function DiscussionsPage() {
   const [posts, setPosts] = useState([]);
   const [newPostText, setNewPostText] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [audioBlob, setAudioBlob] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 

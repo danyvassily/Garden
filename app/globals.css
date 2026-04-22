@@ -32,12 +32,18 @@ html, body {
   color: var(--text-primary);
   font-family: var(--font-main);
   margin: 0;
-  padding: 0;
+  padding: 0 0 70px 0; /* Padding bottom pour la nav mobile */
   box-sizing: border-box;
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+@media (min-width: 768px) {
+  html, body {
+    padding-bottom: 0;
+  }
 }
 
 * {
