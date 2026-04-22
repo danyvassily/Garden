@@ -39,9 +39,6 @@ export default function Navbar() {
         <Link href="/timeline" className="flex items-center gap-2 text-sm font-bold hover:text-[var(--accent-color)] transition-colors">
           <Calendar size={18} /> Timeline
         </Link>
-        <Link href="/map" className="flex items-center gap-2 text-sm font-bold hover:text-[var(--accent-color)] transition-colors">
-          <MapIcon size={18} /> Map
-        </Link>
       </div>
       
       <div className="flex items-center gap-6">

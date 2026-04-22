@@ -12,7 +12,6 @@ export default function MobileNav() {
     { href: "/discussions", icon: Compass, label: "Tree" },
     { href: "/gallery", icon: ImageIcon, label: "Album" },
     { href: "/timeline", icon: Calendar, label: "Timeline" },
-    { href: "/map", icon: MapIcon, label: "Map" },
   ];
 
   return (
