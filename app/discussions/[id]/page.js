@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { getPostById } from "@/lib/firestore";
 import { UserAuth } from "@/context/AuthContext";
 import DiscussionNode from "@/components/DiscussionNode";
-import MiniMap from "@/components/MiniMap";
 import Link from "next/link";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -115,7 +114,6 @@ export default function DiscussionThreadPage({ params }) {
         </div>
 
         {/* Floating Components */}
-        <MiniMap onClick={scrollToTop} />
       </div>
     </motion.div>
   );
