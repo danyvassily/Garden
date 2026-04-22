@@ -5,7 +5,7 @@ import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { UserAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ArrowRight, Star, Plus, Send, X } from "lucide-react";
 import Link from "next/link";
 import FileUpload from "@/components/FileUpload";
