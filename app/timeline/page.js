@@ -6,13 +6,38 @@ import { db } from "@/lib/firebase";
 import { UserAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Calendar, ArrowRight, Star } from "lucide-react";
+import { Calendar, ArrowRight, Star, Plus, Send, X } from "lucide-react";
 import Link from "next/link";
+import FileUpload from "@/components/FileUpload";
+import { addPost } from "@/lib/firestore";
+import { uploadFile } from "@/lib/storage";
 
 export default function TimelinePage() {
   const { user, loading } = UserAuth();
   const router = useRouter();
   const [posts, setPosts] = useState([]);
+  const [showUpload, setShowUpload] = useState(false);
+  const [newText, setNewText] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleAddMilestone = async (e) => {
+    e.preventDefault();
+    if (!newText.trim() && !selectedFile) return;
+    setSubmitting(true);
+    try {
+      let fileData = null;
+      if (selectedFile) fileData = await uploadFile(selectedFile);
+      await addPost(newText, user, null, fileData);
+      setNewText("");
+      setSelectedFile(null);
+      setShowUpload(false);
+    } catch (error) {
+      console.error("Failed to add milestone", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) router.push("/");
@@ -42,7 +67,52 @@ export default function TimelinePage() {
           Our Timeline
         </motion.h1>
         <p className="text-secondary">Every chapter of our story / Chaque étape de notre histoire.</p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowUpload(true)}
+          className="mt-6 btn-accent inline-flex items-center gap-2 px-6 py-3 rounded-full shadow-lg"
+        >
+          <Plus size={20} /> Add Milestone / Ajouter un souvenir
+        </motion.button>
       </header>
+
+      <AnimatePresence>
+        {showUpload && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="mb-16 glass p-6 rounded-3xl border-white/20 max-w-xl mx-auto shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white">New Chapter / Nouveau Chapitre</h2>
+              <button onClick={() => setShowUpload(false)} className="text-secondary hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddMilestone}>
+              <textarea 
+                value={newText}
+                onChange={(e) => setNewText(e.target.value)}
+                placeholder="What happened? / Que s'est-il passé ?"
+                className="input-area min-h-[100px] mb-4"
+              />
+              <div className="flex items-center justify-between">
+                <FileUpload onFileSelect={setSelectedFile} />
+                <button 
+                  type="submit" 
+                  disabled={submitting || (!newText.trim() && !selectedFile)}
+                  className="btn-accent px-6 py-2 flex items-center gap-2"
+                >
+                  <Send size={16} /> {submitting ? "Sharing..." : "Share / Partager"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="relative border-l-2 border-[var(--accent-color)]/30 ml-4 md:ml-24 pb-20">
         {posts.map((post, i) => (
