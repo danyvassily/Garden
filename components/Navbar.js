@@ -29,7 +29,7 @@ export default function Navbar() {
         </span>
       </Link>
 
-      <div className="hidden lg:flex items-center gap-6">
+      <div className="hidden md:flex items-center gap-6">
         <Link href="/discussions" className="flex items-center gap-2 text-sm font-bold hover:text-[var(--accent-color)] transition-colors">
           <Compass size={18} /> Arbre
         </Link>

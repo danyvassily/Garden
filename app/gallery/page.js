@@ -6,13 +6,37 @@ import { db } from "@/lib/firebase";
 import { UserAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Image as ImageIcon, X, ExternalLink } from "lucide-react";
+import { Image as ImageIcon, X, ExternalLink, Plus, Send } from "lucide-react";
+import FileUpload from "@/components/FileUpload";
+import { addPost } from "@/lib/firestore";
+import { uploadFile } from "@/lib/storage";
 
 export default function GalleryPage() {
   const { user, loading } = UserAuth();
   const router = useRouter();
   const [mediaPosts, setMediaPosts] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const [newPhotoText, setNewPhotoText] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+    setSubmitting(true);
+    try {
+      const fileData = await uploadFile(selectedFile);
+      await addPost(newPhotoText || "Moment partagé dans l'album", user, null, fileData);
+      setNewPhotoText("");
+      setSelectedFile(null);
+      setShowUpload(false);
+    } catch (error) {
+      console.error("Upload failed", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) router.push("/");
@@ -42,7 +66,52 @@ export default function GalleryPage() {
           Our Shared Album
         </motion.h1>
         <p className="text-secondary">Capture every moment of our journey together.</p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowUpload(true)}
+          className="mt-6 btn-accent inline-flex items-center gap-2 px-6 py-3 rounded-full shadow-lg"
+        >
+          <Plus size={20} /> Add Photo / Ajouter une photo
+        </motion.button>
       </header>
+
+      <AnimatePresence>
+        {showUpload && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="mb-12 glass p-6 rounded-3xl border-white/20 max-w-xl mx-auto shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white">New Memory / Nouveau Souvenir</h2>
+              <button onClick={() => setShowUpload(false)} className="text-secondary hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpload}>
+              <textarea 
+                value={newPhotoText}
+                onChange={(e) => setNewPhotoText(e.target.value)}
+                placeholder="Write a caption... / Écrivez une légende..."
+                className="input-area min-h-[100px] mb-4"
+              />
+              <div className="flex items-center justify-between">
+                <FileUpload onFileSelect={setSelectedFile} />
+                <button 
+                  type="submit" 
+                  disabled={submitting || !selectedFile}
+                  className="btn-accent px-6 py-2 flex items-center gap-2"
+                >
+                  <Send size={16} /> {submitting ? "Sharing..." : "Share / Partager"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {mediaPosts.map((post, i) => (

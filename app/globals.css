@@ -11,6 +11,22 @@
   --font-main: 'Outfit', 'Inter', -apple-system, sans-serif;
 }
 
+.glass-heavy {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  transition: all 0.3s;
+}
+
+.nav-link:hover {
+  color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
 html, body {
   background: radial-gradient(circle at top right, #fff1f0, #fff9f8 70%);
   color: var(--text-primary);
