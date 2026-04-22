@@ -5,9 +5,10 @@ import { collection, query, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { UserAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, X, Navigation, Compass, Plus, Send, Heart, Map as MapIcon, Star } from "lucide-react";
+import { MapPin, X, Navigation, Compass, Plus, Send, Heart, Map as MapIcon, Star, Search } from "lucide-react";
 import Link from "next/link";
 import { addPost } from "@/lib/firestore";
+import GoogleMapLoader from "@/components/GoogleMapLoader";
 
 export default function MapPage() {
   const { user, loading } = UserAuth();
@@ -26,7 +27,6 @@ export default function MapPage() {
       const q = query(collection(db, "posts"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const all = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Filter posts that have location data
         setPosts(all.filter(p => p.lat && p.lng));
       });
       return () => unsubscribe();
@@ -38,8 +38,6 @@ export default function MapPage() {
     if (!newLocationName.trim()) return;
     setSubmitting(true);
     try {
-      // For this demo, we'll pick a random lat/lng near the last one or Europe
-      // In a full Google Maps integration, we'd use the Places Autocomplete
       const lat = 48.8566 + (Math.random() - 0.5) * 5;
       const lng = 2.3522 + (Math.random() - 0.5) * 10;
       
@@ -68,85 +66,141 @@ export default function MapPage() {
   });
 
   return (
-    <div className="page-container pt-24 px-6 h-screen flex flex-col">
-      <header className="mb-8 text-center flex-shrink-0">
-        <motion.h1 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-3xl font-bold bg-gradient-to-r from-[var(--text-primary)] to-[var(--accent-color)] bg-clip-text text-transparent"
+    <div className="fixed inset-0 pt-20 flex flex-col bg-[#fdfaf9]">
+      {/* Top Header Floating UI */}
+      <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xl px-4">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="glass-heavy p-4 rounded-3xl shadow-2xl flex items-center justify-between gap-4 border-white/50"
         >
-          Our Adventures Map
-        </motion.h1>
-        
-        <div className="flex flex-wrap justify-center gap-4 mt-6">
-          <button 
-            onClick={() => setViewType('all')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewType === 'all' ? 'bg-[var(--accent-color)] text-white shadow-lg' : 'bg-white/5 border border-white/10 text-secondary'}`}
-          >
-            All Places
-          </button>
-          <button 
-            onClick={() => setViewType('visited')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewType === 'visited' ? 'bg-pink-500 text-white shadow-lg' : 'bg-white/5 border border-white/10 text-secondary'}`}
-          >
-            <Heart size={12} className="inline mr-1" /> Visited
-          </button>
-          <button 
-            onClick={() => setViewType('wishlist')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewType === 'wishlist' ? 'bg-blue-500 text-white shadow-lg' : 'bg-white/5 border border-white/10 text-secondary'}`}
-          >
-            <Star size={12} className="inline mr-1" /> Wishlist
-          </button>
-          
+          <div className="flex items-center gap-2 px-3">
+            <div className="w-8 h-8 rounded-full bg-[var(--accent-color)] flex items-center justify-center text-white shadow-lg">
+              <Compass size={18} />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-[var(--text-primary)]">Garden Map</h1>
+              <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">Our Adventures</p>
+            </div>
+          </div>
+
+          <div className="flex bg-black/5 p-1 rounded-2xl">
+            {['all', 'visited', 'wishlist'].map((type) => (
+              <button
+                key={type}
+                onClick={() => setViewType(type)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${viewType === type ? 'bg-white text-[var(--accent-color)] shadow-md' : 'text-secondary hover:text-[var(--text-primary)]'}`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
           <button 
             onClick={() => setShowUpload(true)}
-            className="px-4 py-1.5 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all ml-4"
+            className="w-10 h-10 rounded-full bg-[var(--accent-color)] flex items-center justify-center text-white shadow-lg hover:scale-110 transition-transform flex-shrink-0"
           >
-            <Plus size={14} className="inline mr-1" /> Add Place
+            <Plus size={20} />
           </button>
-        </div>
-      </header>
+        </motion.div>
+      </div>
 
-      <div className="flex-1 rounded-3xl overflow-hidden relative glass border-white/10 mb-8 shadow-2xl bg-[#0a0a0a]">
-        {/* Google Maps Integration Placeholder */}
-        <div className="absolute inset-0 z-0">
-          <iframe 
-            width="100%" 
-            height="100%" 
-            frameBorder="0" 
-            style={{ border: 0, filter: 'grayscale(0.8) invert(1) contrast(1.2)' }}
-            src={`https://www.google.com/maps/embed/v1/view?key=YOUR_API_KEY_HERE&center=48.8566,2.3522&zoom=4&maptype=roadmap`}
-            allowFullScreen
-          ></iframe>
-          <div className="absolute inset-0 bg-[var(--accent-color)]/5 pointer-events-none"></div>
-        </div>
+      {/* Main Map Container */}
+      <div className="flex-1 relative">
+        <GoogleMapLoader 
+          posts={filteredPosts} 
+          onPinClick={setSelectedPin} 
+          selectedPin={selectedPin}
+        />
+        
+        {/* Floating Side Info (Desktop) / Bottom Sheet (Mobile) */}
+        <AnimatePresence>
+          {selectedPin && (
+            <motion.div
+              initial={{ x: 400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 400, opacity: 0 }}
+              className="absolute right-6 top-48 bottom-6 w-80 glass-heavy border-white/50 rounded-[2.5rem] p-8 z-[200] shadow-2xl overflow-hidden flex flex-col"
+            >
+              <button 
+                onClick={() => setSelectedPin(null)}
+                className="absolute top-6 right-6 p-2 hover:bg-black/5 rounded-full transition-colors"
+              >
+                <X size={20} className="text-secondary" />
+              </button>
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${selectedPin.locationType === 'wishlist' ? 'bg-blue-500/10 text-blue-500' : 'bg-pink-500/10 text-pink-500'}`}>
+                  {selectedPin.locationType === 'wishlist' ? <Star size={24} /> : <Heart size={24} />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-[var(--text-primary)] text-xl leading-tight">{selectedPin.locationName || "Somewhere"}</h3>
+                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mt-1">
+                    {selectedPin.locationType === 'wishlist' ? 'Dream Journey' : 'Treasured Memory'}
+                  </p>
+                </div>
+              </div>
 
-        {/* Overlay for "Add Location" */}
+              {selectedPin.fileUrl && (
+                <div className="w-full h-40 rounded-3xl overflow-hidden mb-6 border-4 border-white shadow-xl">
+                  <img src={selectedPin.fileUrl} className="w-full h-full object-cover" alt="" />
+                </div>
+              )}
+
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed italic mb-8">
+                "{selectedPin.text}"
+              </p>
+              
+              <div className="mt-auto space-y-3">
+                <Link 
+                  href={`/discussions/${selectedPin.id}`}
+                  className="btn-accent w-full py-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Compass size={16} /> Open Discussion
+                </Link>
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${selectedPin.lat},${selectedPin.lng}`}
+                  target="_blank"
+                  className="w-full py-4 rounded-2xl text-xs flex items-center justify-center gap-2 bg-white border border-black/5 hover:bg-black/5 transition-colors font-bold text-[var(--text-primary)]"
+                >
+                  <Navigation size={16} /> View on Google Maps
+                </a>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Upload Modal UI */}
         <AnimatePresence>
           {showUpload && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[300] bg-[#fff9f8]/80 backdrop-blur-xl flex items-center justify-center p-6"
             >
-              <div className="glass-heavy p-8 rounded-3xl border-white/20 max-w-md w-full shadow-2xl">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-white">Add a New Place</h2>
-                  <button onClick={() => setShowUpload(false)} className="text-secondary hover:text-white">
-                    <X size={20} />
-                  </button>
+              <div className="w-full max-w-md bg-white rounded-[3rem] p-10 shadow-[0_32px_64px_-16px_rgba(255,126,103,0.2)] border border-white relative">
+                <button 
+                  onClick={() => setShowUpload(false)} 
+                  className="absolute top-8 right-8 p-2 hover:bg-black/5 rounded-full"
+                >
+                  <X size={20} className="text-secondary" />
+                </button>
+                
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-black text-[var(--text-primary)] mb-2">Pin a Location</h2>
+                  <p className="text-secondary text-sm">Where should we go next? / Où allons-nous ?</p>
                 </div>
                 
-                <form onSubmit={handleAddLocation} className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-secondary uppercase tracking-widest block mb-2">Location Name</label>
+                <form onSubmit={handleAddLocation} className="space-y-6">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" size={18} />
                     <input 
                       type="text" 
                       value={newLocationName}
                       onChange={(e) => setNewLocationName(e.target.value)}
-                      placeholder="Paris, Tokyo, Home..."
-                      className="input-area h-12"
+                      placeholder="Search a place... / Chercher un lieu..."
+                      className="w-full bg-[#f8f5f4] border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-[var(--text-primary)] focus:ring-2 ring-[var(--accent-color)]/20 transition-all"
                       autoFocus
                     />
                   </div>
@@ -155,98 +209,30 @@ export default function MapPage() {
                     <button 
                       type="button"
                       onClick={() => setNewLocationType('visited')}
-                      className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-2 ${newLocationType === 'visited' ? 'bg-pink-500/20 border-pink-500 text-pink-500' : 'bg-white/5 border-white/10 text-secondary'}`}
+                      className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-2 ${newLocationType === 'visited' ? 'border-[var(--accent-color)] bg-[var(--accent-color)]/5 text-[var(--accent-color)] shadow-inner' : 'border-black/5 bg-black/5 text-secondary'}`}
                     >
-                      <Heart size={20} />
-                      <span className="text-xs font-bold">Visited</span>
+                      <Heart size={24} fill={newLocationType === 'visited' ? 'currentColor' : 'none'} />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Been there</span>
                     </button>
                     <button 
                       type="button"
                       onClick={() => setNewLocationType('wishlist')}
-                      className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-2 ${newLocationType === 'wishlist' ? 'bg-blue-500/20 border-blue-500 text-blue-500' : 'bg-white/5 border-white/10 text-secondary'}`}
+                      className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-2 ${newLocationType === 'wishlist' ? 'border-blue-500 bg-blue-500/5 text-blue-500 shadow-inner' : 'border-black/5 bg-black/5 text-secondary'}`}
                     >
-                      <Star size={20} />
-                      <span className="text-xs font-bold">Wishlist</span>
+                      <Star size={24} fill={newLocationType === 'wishlist' ? 'currentColor' : 'none'} />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Must go</span>
                     </button>
                   </div>
 
                   <button 
                     type="submit" 
                     disabled={submitting || !newLocationName.trim()}
-                    className="btn-accent w-full py-4 mt-4 flex items-center justify-center gap-2"
+                    className="btn-accent w-full py-5 rounded-2xl text-sm font-black flex items-center justify-center gap-3 shadow-2xl shadow-[var(--accent-color)]/30"
                   >
-                    <Send size={18} /> {submitting ? "Adding..." : "Add to Map"}
+                    {submitting ? "Pinning..." : "Save to Map / Enregistrer"}
+                    <Send size={18} />
                   </button>
                 </form>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Custom Pins (Rendered on top of Google Map) */}
-        {filteredPosts.map((post, i) => (
-          <motion.button
-            key={post.id}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute z-20 group"
-            style={{ 
-              left: `${((post.lng + 180) / 360) * 100}%`, 
-              top: `${((90 - post.lat) / 180) * 100}%` 
-            }}
-            onClick={() => setSelectedPin(post)}
-          >
-            <div className="relative">
-              <div className={`p-1.5 rounded-full shadow-lg border-2 border-white transition-all ${post.locationType === 'wishlist' ? 'bg-blue-500' : 'bg-pink-500'}`}>
-                {post.locationType === 'wishlist' ? <Star size={12} className="text-white" /> : <Heart size={12} className="text-white" />}
-              </div>
-              <div className="absolute -inset-1 rounded-full bg-white animate-ping opacity-20"></div>
-            </div>
-          </motion.button>
-        ))}
-
-        {/* Info Overlay */}
-        <AnimatePresence>
-          {selectedPin && (
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 glass-heavy border-white/20 rounded-2xl p-6 z-50 shadow-2xl"
-            >
-              <button 
-                onClick={() => setSelectedPin(null)}
-                className="absolute top-4 right-4 text-secondary hover:text-white"
-              >
-                <X size={20} />
-              </button>
-              
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`p-2 rounded-lg ${selectedPin.locationType === 'wishlist' ? 'bg-blue-500/20 text-blue-500' : 'bg-pink-500/20 text-pink-500'}`}>
-                  {selectedPin.locationType === 'wishlist' ? <Star size={20} /> : <Heart size={20} />}
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-lg">{selectedPin.locationName || "Adventure"}</h3>
-                  <p className="text-[10px] text-secondary font-bold uppercase tracking-widest">{selectedPin.locationType === 'wishlist' ? 'Wishlist / À visiter' : 'Visited / Déjà visité'}</p>
-                </div>
-              </div>
-
-              <p className="text-gray-300 text-sm italic mb-6">"{selectedPin.text}"</p>
-              
-              <div className="flex gap-2">
-                <Link 
-                  href={`/discussions/${selectedPin.id}`}
-                  className="btn-accent flex-1 py-2.5 text-xs flex items-center justify-center gap-2"
-                >
-                  <Compass size={14} /> Open Memory
-                </Link>
-                <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${selectedPin.lat},${selectedPin.lng}`}
-                  target="_blank"
-                  className="bg-white/5 border border-white/10 hover:bg-white/10 p-2.5 rounded-xl transition-all"
-                >
-                  <Navigation size={18} className="text-white" />
-                </a>
               </div>
             </motion.div>
           )}
