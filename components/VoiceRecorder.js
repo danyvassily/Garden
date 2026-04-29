@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Trash2, Play, Pause, Check } from "lucide-react";
+import { Mic, Square, Trash2, Play, Pause, Check, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function VoiceRecorder({ onAudioReady }) {
@@ -42,7 +42,6 @@ export default function VoiceRecorder({ onAudioReady }) {
       }, 1000);
     } catch (err) {
       console.error("Permission denied or microphone error:", err);
-      alert("Microphone access denied.");
     }
   };
 
@@ -80,52 +79,70 @@ export default function VoiceRecorder({ onAudioReady }) {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      {!audioUrl ? (
-        <button
-          type="button"
-          onClick={isRecording ? stopRecording : startRecording}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-white/5 hover:bg-white/10 text-secondary'}`}
-        >
-          {isRecording ? <Square size={16} fill="white" /> : <Mic size={16} />}
-          <span className="text-xs font-bold">
-            {isRecording ? `Recording... ${formatTime(duration)}` : "Hold to Record / Voice Note"}
-          </span>
-        </button>
-      ) : (
-        <div className="flex items-center gap-3 p-2 bg-white/5 border border-white/10 rounded-full pr-4">
-          <button 
+    <div className="relative">
+      <AnimatePresence mode="wait">
+        {!audioUrl ? (
+          <motion.button
+            key="record"
             type="button"
-            onClick={togglePlayback}
-            className="w-10 h-10 rounded-full bg-[var(--accent-color)] flex items-center justify-center text-white shadow-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest py-2 px-4 rounded-xl transition-all ${isRecording ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'text-[hsl(var(--text-secondary))] hover:text-[var(--accent-color)] hover:bg-black/5'}`}
           >
-            {isPlaying ? <Pause size={18} fill="white" /> : <Play size={18} fill="white" className="ml-1" />}
-          </button>
-          
-          <div className="flex-1">
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-[var(--accent-color)]"
-                initial={{ width: 0 }}
-                animate={{ width: isPlaying ? "100%" : "0%" }}
-                transition={{ duration: duration, ease: "linear" }}
-              />
+            {isRecording ? (
+              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity }} className="bg-white w-2 h-2 rounded-full" />
+            ) : (
+              <Mic size={14} />
+            )}
+            <span>
+              {isRecording ? `Recording... ${formatTime(duration)}` : "Note Vocale"}
+            </span>
+          </motion.button>
+        ) : (
+          <motion.div 
+            key="preview"
+            initial={{ opacity: 0, scale: 0.9, x: -10 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            className="flex items-center gap-4 p-3 bg-white/50 backdrop-blur-md border border-black/5 rounded-2xl max-w-sm shadow-sm"
+          >
+            <button 
+              type="button"
+              onClick={togglePlayback}
+              className="w-10 h-10 rounded-xl bg-[var(--accent-color)] flex items-center justify-center text-white shadow-lg shadow-[var(--accent-glow)] flex-shrink-0"
+            >
+              {isPlaying ? <Pause size={18} fill="white" /> : <Play size={18} fill="white" className="ml-1" />}
+            </button>
+            
+            <div className="flex-1 overflow-hidden min-w-[120px]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black uppercase tracking-widest text-[var(--accent-color)]">Voice Note</span>
+                <span className="text-[9px] font-black opacity-40">{formatTime(duration)}</span>
+              </div>
+              <div className="h-1 bg-black/5 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-[var(--accent-color)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: isPlaying ? "100%" : "0%" }}
+                  transition={{ duration: isPlaying ? duration : 0.3, ease: "linear" }}
+                />
+              </div>
             </div>
-            <p className="text-[10px] text-secondary mt-1 font-bold">Voice Note — {formatTime(duration)}</p>
-          </div>
 
-          <button type="button" onClick={deleteRecording} className="text-secondary hover:text-red-500 p-1">
-            <Trash2 size={16} />
-          </button>
+            <button type="button" onClick={deleteRecording} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+              <Trash2 size={14} />
+            </button>
 
-          <audio 
-            ref={audioRef} 
-            src={audioUrl} 
-            onEnded={() => setIsPlaying(false)} 
-            className="hidden" 
-          />
-        </div>
-      )}
+            <audio 
+              ref={audioRef} 
+              src={audioUrl} 
+              onEnded={() => setIsPlaying(false)} 
+              className="hidden" 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

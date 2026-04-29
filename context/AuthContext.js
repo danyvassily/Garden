@@ -11,11 +11,20 @@ export const AuthContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
+        setUser(currentUser);
+        setLoading(false);
+      }, (error) => {
+        console.error("Firebase Auth state error:", error);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Failed to initialize Auth listener:", error);
       setLoading(false);
-    });
-    return () => unsubscribe();
+    }
   }, []);
 
   const loginWithGoogle = async () => {
