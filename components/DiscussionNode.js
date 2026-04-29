@@ -67,22 +67,41 @@ export default function DiscussionNode({ post, level = 0, isLast = false }) {
       // Reset stroke to hidden
       gsap.set(pathRef.current, { strokeDasharray: pathLength, strokeDashoffset: pathLength });
 
-      const st = ScrollTrigger.create({
-        trigger: nodeRef.current,
-        start: "top 85%", // Starts animating when comment is 85% down the viewport
-        end: "top 40%",   // Finishes when comment is 40% down
-        scrub: 1,         // Smooth scrubbing
-        animation: gsap.to(pathRef.current, {
-          strokeDashoffset: 0,
-          ease: "none"
-        })
-      });
+      // If it's a newly added post (less than 10 seconds old), animate it immediately
+      const isNew = post.createdAt && (Date.now() - post.createdAt.toMillis() < 10000);
 
-      return () => {
-        st.kill();
-      };
+      if (isNew) {
+        gsap.to(pathRef.current, {
+          strokeDashoffset: 0,
+          duration: 1.5,
+          ease: "power2.out",
+          delay: 0.5
+        });
+      } else {
+        const st = ScrollTrigger.create({
+          trigger: nodeRef.current,
+          start: "top 90%", 
+          end: "top 50%",   
+          scrub: 1,
+          animation: gsap.to(pathRef.current, {
+            strokeDashoffset: 0,
+            ease: "none"
+          })
+        });
+
+        // Force refresh ScrollTrigger because the DOM changed
+        ScrollTrigger.refresh();
+
+        return () => {
+          st.kill();
+        };
+      }
     }
-  }, [level, replies.length]);
+  }, [level, replies.length, post.id]);
+
+  const isDany = post.authorName?.toLowerCase().includes("dany");
+  const authorColor = isDany ? "#5eead4" : "#f9a8d4";
+  const threadColor = isDany ? "#5eead4" : "#f9a8d4"; // Path color matches the author of the node it leads to
 
   const handleUpdate = async () => {
     if (!editText.trim()) return;
@@ -164,18 +183,12 @@ export default function DiscussionNode({ post, level = 0, isLast = false }) {
             ref={pathRef}
             d="M 0,0 L 0,20 Q 0,40 100,40" 
             fill="none" 
-            stroke="url(#gradientThread)" 
+            stroke={threadColor} 
             strokeWidth="5" 
             vectorEffect="non-scaling-stroke"
             strokeLinecap="round"
+            style={{ filter: `drop-shadow(0 0 8px ${threadColor}60)` }}
           />
-          
-          <defs>
-            <linearGradient id="gradientThread" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="var(--accent-color)" />
-              <stop offset="100%" stopColor="#ffb3c6" />
-            </linearGradient>
-          </defs>
         </svg>
       )}
 
@@ -202,7 +215,10 @@ export default function DiscussionNode({ post, level = 0, isLast = false }) {
 
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[hsl(var(--text-primary))] text-white flex items-center justify-center text-xs font-black shadow-lg">
+              <div 
+                className="w-10 h-10 rounded-2xl text-white flex items-center justify-center text-xs font-black shadow-lg"
+                style={{ background: authorColor }}
+              >
                 {post.authorName?.substring(0, 1).toUpperCase()}
               </div>
               <div className="flex flex-col">
