@@ -131,20 +131,20 @@ export default function DiscussionsPage() {
 
   return (
     <div className="min-h-screen bg-garden-gradient pb-32">
-      <div className="max-w-5xl mx-auto px-6 pt-32 pb-12 md:pt-40 relative z-10">
-        <header className="mb-16 text-center">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 pt-24 md:pt-40 pb-12 relative z-10">
+        <header className="mb-12 md:mb-16 text-center">
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="inline-block p-3 rounded-2xl bg-white/40 border border-white mb-6"
+            className="inline-block p-2 md:p-3 rounded-2xl bg-white/40 border border-white mb-4 md:mb-6"
           >
-            <Heart size={32} className="text-[var(--accent-color)] fill-[var(--accent-color)]" />
+            <Heart size={24} className="text-[var(--accent-color)] fill-[var(--accent-color)] md:w-8 md:h-8" />
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl font-serif mb-4 text-[hsl(var(--text-primary))]"
+            className="text-3xl md:text-5xl font-serif mb-3 md:mb-4 text-[hsl(var(--text-primary))]"
           >
             Le Jardin des Pensées
           </motion.h1>
@@ -152,10 +152,10 @@ export default function DiscussionsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-[hsl(var(--text-secondary))] max-w-xl mx-auto font-medium"
+            className="text-sm md:text-base text-[hsl(var(--text-secondary))] max-w-xl mx-auto font-medium px-4"
           >
-            Notre espace partagé pour cultiver nos souvenirs et nos discussions.<br/>
-            <span className="text-xs uppercase tracking-[0.3em] opacity-50 mt-4 block">Eirni & Dany</span>
+            Notre espace partagé pour cultiver nos souvenirs et nos discussions.<br className="hidden md:block" />
+            <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mt-3 md:mt-4 block">Eirni & Dany</span>
           </motion.p>
         </header>
 

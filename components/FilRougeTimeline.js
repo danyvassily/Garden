@@ -112,6 +112,15 @@ function ThreadCard({ post, repliesCount, isEven, onOpen }) {
 }
 
 export default function FilRougeTimeline({ allPosts, onOpenModal }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const roots = allPosts
     .filter((p) => !p.parentId)
     .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
@@ -119,11 +128,17 @@ export default function FilRougeTimeline({ allPosts, onOpenModal }) {
   if (roots.length === 0) return null;
 
   return (
-    <div style={{ position: "relative", width: "100%", maxWidth: 800, margin: "0 auto", padding: "40px 16px" }}>
+    <div style={{ 
+      position: "relative", 
+      width: "100%", 
+      maxWidth: isMobile ? "100%" : 800, 
+      margin: "0 auto", 
+      padding: isMobile ? "20px 0" : "40px 16px" 
+    }}>
       {/* Le Fil Rouge vertical */}
       <div style={{
         position: "absolute",
-        left: "50%",
+        left: isMobile ? 24 : "50%",
         top: 0, bottom: 0,
         width: 3,
         marginLeft: -1.5,
@@ -132,7 +147,7 @@ export default function FilRougeTimeline({ allPosts, onOpenModal }) {
         borderRadius: 8,
       }} />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 32 : 48 }}>
         {roots.map((post, index) => {
           const isEven = index % 2 === 0;
           const repliesCount = allPosts.filter(p => p.parentId === post.id).length;
@@ -147,16 +162,15 @@ export default function FilRougeTimeline({ allPosts, onOpenModal }) {
               style={{
                 position: "relative",
                 display: "flex",
-                justifyContent: isEven ? "flex-start" : "flex-end",
+                justifyContent: isMobile ? "flex-start" : (isEven ? "flex-start" : "flex-end"),
                 alignItems: "center",
-                paddingLeft: isEven ? 0 : undefined,
-                paddingRight: !isEven ? 0 : undefined,
+                paddingLeft: isMobile ? 48 : 0,
               }}
             >
               {/* Dot on the thread */}
               <div style={{
                 position: "absolute",
-                left: "50%",
+                left: isMobile ? 24 : "50%",
                 transform: "translateX(-50%)",
                 width: 16, height: 16,
                 borderRadius: "50%",
@@ -170,22 +184,22 @@ export default function FilRougeTimeline({ allPosts, onOpenModal }) {
               <div style={{
                 position: "absolute",
                 top: "50%",
-                left: isEven ? "50%" : undefined,
-                right: isEven ? undefined : "50%",
-                width: "calc(50% - 80px)",
+                left: isMobile ? 24 : (isEven ? "50%" : undefined),
+                right: !isMobile && !isEven ? "50%" : undefined,
+                width: isMobile ? 24 : "calc(50% - 80px)",
                 height: 2,
                 background: "linear-gradient(to right, rgba(233,69,96,0.4), transparent)",
-                transform: isEven ? undefined : "scaleX(-1)",
+                transform: (!isMobile && !isEven) ? "scaleX(-1)" : undefined,
                 zIndex: 1,
               }} />
 
-              {/* Card wrapper — takes left or right half */}
+              {/* Card wrapper */}
               <div style={{
-                width: "50%",
+                width: isMobile ? "100%" : "50%",
                 display: "flex",
-                justifyContent: isEven ? "flex-end" : "flex-start",
-                paddingRight: isEven ? 48 : 0,
-                paddingLeft: !isEven ? 48 : 0,
+                justifyContent: isMobile ? "flex-start" : (isEven ? "flex-end" : "flex-start"),
+                paddingRight: (!isMobile && isEven) ? 48 : 0,
+                paddingLeft: (!isMobile && !isEven) ? 48 : 0,
               }}>
                 <ThreadCard
                   post={post}
