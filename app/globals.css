@@ -188,14 +188,13 @@ h1, h2, h3, .font-serif {
 /* Navbar Specific */
 .navbar {
   position: fixed;
-  top: 1.5rem;
+  top: 1.25rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 90%;
-  max-width: 1200px;
-  height: 70px;
-  border-radius: var(--radius-md);
-  padding: 0 2rem;
+  width: calc(100% - 32px);
+  max-width: 900px;
+  border-radius: 24px;
+  padding: 10px 16px;
   z-index: 1000;
   display: flex;
   align-items: center;
